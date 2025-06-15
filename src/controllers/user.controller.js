@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import asyncHandler from 'express-async-handler';
 import User from '../models/user.model.js';
 import hashPassword from '../utils/hashPassword.js';
@@ -99,4 +100,38 @@ const signInUser = asyncHandler(async (req, res) => {
   });
 });
 
-export { getProfile, signUpUser, signInUser };
+// @desc    Update a user profile
+// @route   PUT /api/auth/v1/users/profile
+// @access  Private
+const updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const { fullname, email, password, role, bio, avatar, skills, socialLinks } =
+    req.body;
+
+  if (fullname) user.fullname = fullname;
+  if (email) user.email = email.toLowerCase();
+  if (password) user.password = await hashPassword(password);
+  if (role && req.user.role === 'admin') user.role = role;
+  if (bio) user.bio = bio;
+  if (avatar) user.avatar = avatar;
+  if (skills) user.skills = skills;
+  if (socialLinks) user.socialLinks = socialLinks;
+
+  const updatedUser = await user.save();
+  const userWithoutPassword = updatedUser.toObject();
+  delete userWithoutPassword.password;
+
+  return res.status(200).json({
+    successful: true,
+    message: 'User successfully updated',
+    updatedUser: userWithoutPassword,
+  });
+});
+
+export { getProfile, signUpUser, signInUser, updateProfile };
