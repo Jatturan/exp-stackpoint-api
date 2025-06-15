@@ -3,8 +3,8 @@ import {
   getProfile,
   signUpUser,
   signInUser,
-  updateProfile,
   logoutUser,
+  updateProfile,
 } from '../controllers/user.controller.js';
 import protect from '../middlewares/auth.middleware.js';
 
