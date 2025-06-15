@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import asyncHandler from 'express-async-handler';
 import User from '../models/user.model.js';
 import hashPassword from '../utils/hashPassword.js';
@@ -25,9 +24,8 @@ const signUpUser = asyncHandler(async (req, res) => {
   const { fullname, email, password } = req.body;
 
   if (!fullname || !email || !password) {
-    return res
-      .status(400)
-      .json({ error: 'Full name, email and password are required' });
+    res.status(400);
+    throw new Error('Full name, email and password are required');
   }
 
   const normalizedEmail = email?.toLowerCase();
@@ -35,10 +33,10 @@ const signUpUser = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({ email: normalizedEmail });
 
   if (existingUser) {
-    return res.status(400).json({ error: 'Email already registered' });
+    res.status(400);
+    throw new Error('Email already registered');
   }
 
-  // Encrypt password
   const hashedPassword = await hashPassword(password);
 
   const user = await User.create({
@@ -48,11 +46,11 @@ const signUpUser = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).json({ error: 'User unsuccessfully created' });
+    res.status(400);
+    throw new Error('User unsuccessfully created');
   }
 
   const token = generateToken(user._id);
-
   const { password: _, ...userData } = user.toObject();
 
   return res.status(201).json({
@@ -70,7 +68,8 @@ const signInUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+    res.status(400);
+    throw new Error('Email and password are required');
   }
 
   const normalizedEmail = email?.toLowerCase();
@@ -78,18 +77,18 @@ const signInUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    res.status(404);
+    throw new Error('User not found');
   }
 
-  // Verify password
   const isVerified = await verifyPassword(password, user.password);
 
   if (!isVerified) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401);
+    throw new Error('Invalid credentials');
   }
 
   const token = await generateToken(user._id);
-
   const { password: _, ...userData } = user.toObject();
 
   return res.status(200).json({
@@ -97,6 +96,17 @@ const signInUser = asyncHandler(async (req, res) => {
     message: 'User successfully logged in',
     token,
     data: userData,
+  });
+});
+
+// @desc    Logout a user
+// @route   POST /api/auth/v1/users/logout
+// @access  Private
+const logoutUser = asyncHandler(async (req, res) => {
+  return res.status(200).json({
+    successful: true,
+    message:
+      'User successfully logged out. Please delete tokens on the client side',
   });
 });
 
@@ -134,4 +144,4 @@ const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
-export { getProfile, signUpUser, signInUser, updateProfile };
+export { getProfile, signUpUser, signInUser, logoutUser, updateProfile };
