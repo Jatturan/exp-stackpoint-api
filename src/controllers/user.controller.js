@@ -4,6 +4,19 @@ import hashPassword from '../utils/hashPassword.js';
 import generateToken from '../utils/generateToken.js';
 import verifyPassword from '../utils/verifyPassword.js';
 
+// @desc    Get a user profile
+// @route   GET /api/auth/v1/users/profile
+// @access  Private
+const getProfile = asyncHandler(async (req, res) => {
+  const user = req.user;
+
+  return res.status(200).json({
+    successful: true,
+    message: 'User profile successfully fetched',
+    data: user,
+  });
+});
+
 // @desc    Create a user
 // @route   POST /api/auth/v1/users/register
 // @access  Public
@@ -16,7 +29,7 @@ const signUpUser = asyncHandler(async (req, res) => {
       .json({ error: 'Full name, email and password are required' });
   }
 
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email?.toLowerCase();
 
   const existingUser = await User.findOne({ email: normalizedEmail });
 
@@ -59,7 +72,7 @@ const signInUser = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email?.toLowerCase();
 
   const user = await User.findOne({ email: normalizedEmail });
 
@@ -86,4 +99,4 @@ const signInUser = asyncHandler(async (req, res) => {
   });
 });
 
-export { signUpUser, signInUser };
+export { getProfile, signUpUser, signInUser };
