@@ -7,7 +7,7 @@ import { NODE_ENV } from './config/index.js';
 import connDB from './config/db.js';
 
 // Connect database
-connDB();
+// connDB();
 
 const app = express();
 
