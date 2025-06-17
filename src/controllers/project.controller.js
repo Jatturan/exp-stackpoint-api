@@ -111,6 +111,18 @@ const updateProject = asyncHandler(async (req, res) => {
     throw new Error('Invalid ID');
   }
 
+  const project = await Project.findById(id);
+
+  if (!project) {
+    res.status(404);
+    throw new Error('Project not found');
+  }
+
+  if (project.owner.toString() != req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update project');
+  }
+
   // Sanitize tags
   let cleanTags = [];
 
@@ -145,4 +157,41 @@ const updateProject = asyncHandler(async (req, res) => {
   });
 });
 
-export { getProjects, getProject, createProject, updateProject };
+// @desc    Delete a project
+// @route   DELETE /api/auth/v1/projects/:id
+// @access  Private
+const deleteProject = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error('Invalid ID');
+  }
+
+  const project = await Project.findById(id);
+
+  if (!project) {
+    res.status(404);
+    throw new Error('Project not found');
+  }
+
+  if (project.owner.toString() != req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to delete project');
+  }
+
+  const deletedProject = await Project.findByIdAndDelete(id);
+
+  if (!deletedProject) {
+    res.status(400);
+    throw new Error('Project unsuccessfully deleted');
+  }
+
+  res.status(200).json({
+    successful: true,
+    message: 'Project successfully deleted',
+    deletedProject,
+  });
+});
+
+export { getProjects, getProject, createProject, updateProject, deleteProject };
