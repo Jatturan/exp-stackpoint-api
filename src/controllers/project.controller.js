@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Project from '../models/project.model.js';
+import mongoose from 'mongoose';
 
 // @desc    Get all projects
 // @route   GET /api/auth/v1/projects
@@ -11,6 +12,31 @@ const getProjects = asyncHandler(async (req, res) => {
     successful: true,
     message: 'Successfully fetched all projects',
     data: projects,
+  });
+});
+
+// @desc    Get a project
+// @route   GET /api/auth/v1/projects/:id
+// @access  Private
+const getProject = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error('Invalid ID');
+  }
+
+  const project = await Project.findById(id);
+
+  if (!project) {
+    res.status(404);
+    throw new Error('Project not found');
+  }
+
+  res.status(200).json({
+    successful: true,
+    message: 'Project successfully fetched',
+    data: project,
   });
 });
 
@@ -65,4 +91,4 @@ const createProject = asyncHandler(async (req, res) => {
   });
 });
 
-export { getProjects, createProject };
+export { getProjects, getProject, createProject };
