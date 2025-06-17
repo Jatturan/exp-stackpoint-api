@@ -1,6 +1,6 @@
+import mongoose from 'mongoose';
 import asyncHandler from 'express-async-handler';
 import Project from '../models/project.model.js';
-import mongoose from 'mongoose';
 
 // @desc    Get all projects
 // @route   GET /api/auth/v1/projects
@@ -91,4 +91,58 @@ const createProject = asyncHandler(async (req, res) => {
   });
 });
 
-export { getProjects, getProject, createProject };
+// @desc    Update a project
+// @route   PUT /api/auth/v1/projects/:id
+// @access  Private
+const updateProject = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    visibility,
+    tags,
+    screenshots,
+    repoUrl,
+    liveUrl,
+  } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error('Invalid ID');
+  }
+
+  // Sanitize tags
+  let cleanTags = [];
+
+  if (Array.isArray(tags)) {
+    cleanTags = [...new Set(tags.map((tag) => tag.trim().toLowerCase()))];
+  }
+
+  const updateData = {
+    ...(title && { title }),
+    ...(description && { description }),
+    ...(visibility && { visibility }),
+    ...(tags && { tags: cleanTags }),
+    ...(screenshots && { screenshots }),
+    ...(repoUrl && { repoUrl }),
+    ...(liveUrl && { liveUrl }),
+  };
+
+  const updatedProject = await Project.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedProject) {
+    res.status(400);
+    throw new Error('Project unsuccessfully updated');
+  }
+
+  res.status(200).json({
+    successful: true,
+    message: 'Project successfully updated',
+    data: updatedProject,
+  });
+});
+
+export { getProjects, getProject, createProject, updateProject };

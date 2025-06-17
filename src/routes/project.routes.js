@@ -4,6 +4,7 @@ import {
   getProjects,
   getProject,
   createProject,
+  updateProject,
 } from '../controllers/project.controller.js';
 
 const router = express.Router();
@@ -12,6 +13,6 @@ const router = express.Router();
 router.route('/').get(protect, getProjects);
 router.route('/add').post(protect, createProject);
 
-router.route('/:id').get(protect, getProject);
+router.route('/:id').get(protect, getProject).put(protect, updateProject);
 
 export default router;
